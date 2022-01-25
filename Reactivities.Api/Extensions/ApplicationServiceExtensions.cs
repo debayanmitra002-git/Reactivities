@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using Reactivities.Application.Activities;
 using Reactivities.Application.Core;
 using Reactivities.Application.Interfaces;
+using Reactivities.Infrastructure.Photos;
 using Reactivities.Infrastructure.Security;
 using Reactivities.Persistence;
 
@@ -24,12 +25,18 @@ namespace Reactivities.Api.Extensions
             });
             services.AddCors(opts => {
                opts.AddPolicy("CorsPolicy", policy => {
-                   policy.AllowAnyMethod().AllowAnyHeader().WithOrigins("http://localhost:3000");
+                   policy.AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()
+                        .WithOrigins("http://localhost:3000");
                }); 
             });
             services.AddMediatR(typeof(List.Handler).Assembly);
             services.AddAutoMapper(typeof(MappingProfile).Assembly);
             services.AddScoped<IUserAccessor, UserAccessor>();
+            services.AddScoped<IPhotoAccessor, PhotoAccessor>();
+            services.Configure<CloudinarySettings>(config.GetSection("Cloudinary"));
+            services.AddSignalR();
 
             return services;
         }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Reactivities.Api.Extensions;
 using Reactivities.Api.Middleware;
+using Reactivities.Api.SignalR;
 using Reactivities.Application.Activities;
 
 namespace Reactivities.Api
@@ -55,6 +56,7 @@ namespace Reactivities.Api
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<Chathub>("/chat");
             });
         }
     }

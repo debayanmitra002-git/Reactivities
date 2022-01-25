@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Reactivities.Application.Activities;
+using Reactivities.Application.Core;
 using Reactivities.Domain;
 
 namespace Reactivities.Api.Controllers
@@ -11,9 +12,9 @@ namespace Reactivities.Api.Controllers
     public class ActivitiesController : BaseApiController
     {
         [HttpGet]
-        public async Task<ActionResult<List<Activity>>> GetActivities()
+        public async Task<ActionResult<List<Activity>>> GetActivities([FromQuery]ActivityParams param)
         {
-            return HandleResult(await Mediator.Send(new List.Query()));
+            return HandlePagedResult(await Mediator.Send(new List.Query{ Params = param }));
         }
 
         [HttpGet("{id}")]

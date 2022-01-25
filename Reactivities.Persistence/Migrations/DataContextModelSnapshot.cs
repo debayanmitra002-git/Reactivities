@@ -271,6 +271,70 @@ namespace Reactivities.Persistence.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("Reactivities.Domain.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<Guid?>("ActivityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AuthorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Reactivities.Domain.Photo", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AppUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsMain")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
+
+                    b.ToTable("Photos");
+                });
+
+            modelBuilder.Entity("Reactivities.Domain.UserFollowing", b =>
+                {
+                    b.Property<string>("ObserverId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TargetId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ObserverId", "TargetId");
+
+                    b.HasIndex("TargetId");
+
+                    b.ToTable("UserFollowings");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -341,14 +405,64 @@ namespace Reactivities.Persistence.Migrations
                     b.Navigation("AppUser");
                 });
 
+            modelBuilder.Entity("Reactivities.Domain.Comment", b =>
+                {
+                    b.HasOne("Reactivities.Domain.Activity", "Activity")
+                        .WithMany("Comments")
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Reactivities.Domain.AppUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId");
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("Reactivities.Domain.Photo", b =>
+                {
+                    b.HasOne("Reactivities.Domain.AppUser", null)
+                        .WithMany("Photos")
+                        .HasForeignKey("AppUserId");
+                });
+
+            modelBuilder.Entity("Reactivities.Domain.UserFollowing", b =>
+                {
+                    b.HasOne("Reactivities.Domain.AppUser", "Observer")
+                        .WithMany("Followings")
+                        .HasForeignKey("ObserverId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Reactivities.Domain.AppUser", "Target")
+                        .WithMany("Followers")
+                        .HasForeignKey("TargetId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Observer");
+
+                    b.Navigation("Target");
+                });
+
             modelBuilder.Entity("Reactivities.Domain.Activity", b =>
                 {
                     b.Navigation("Attendees");
+
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("Reactivities.Domain.AppUser", b =>
                 {
                     b.Navigation("Activities");
+
+                    b.Navigation("Followers");
+
+                    b.Navigation("Followings");
+
+                    b.Navigation("Photos");
                 });
 #pragma warning restore 612, 618
         }

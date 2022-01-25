@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -28,7 +29,8 @@ namespace Reactivities.Api.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
-            var user = await _userManager.FindByEmailAsync(loginDto.Email);
+            var user = await _userManager.Users.Include(p => p.Photos)
+                .FirstOrDefaultAsync(x => x.Email == loginDto.Email);
             if (user == null)
                 return Unauthorized();
 
@@ -45,13 +47,13 @@ namespace Reactivities.Api.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         {
-            if(await _userManager.Users.AnyAsync(x=> x.Email == registerDto.Email))
+            if (await _userManager.Users.AnyAsync(x => x.Email == registerDto.Email))
             {
                 ModelState.AddModelError("email", "Email Taken");
                 return ValidationProblem();
             }
-                
-            if(await _userManager.Users.AnyAsync(x=> x.UserName == registerDto.Username))
+
+            if (await _userManager.Users.AnyAsync(x => x.UserName == registerDto.Username))
             {
                 ModelState.AddModelError("username", "Username Taken");
                 return ValidationProblem();
@@ -64,20 +66,21 @@ namespace Reactivities.Api.Controllers
                 UserName = registerDto.Username
             };
             var result = await _userManager.CreateAsync(user, registerDto.Password);
-            if(result.Succeeded)
+            if (result.Succeeded)
             {
                 return CreateUserObject(user);
             }
             else
                 return BadRequest("Problem registering user");
-                
+
         }
 
         [Authorize]
         [HttpGet]
         public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
-            var user = await _userManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
+            var user = await _userManager.Users.Include(p => p.Photos)
+                .FirstOrDefaultAsync(x => x.Email == User.FindFirstValue(ClaimTypes.Email));
             return CreateUserObject(user);
         }
 
@@ -86,7 +89,7 @@ namespace Reactivities.Api.Controllers
             return new UserDto
             {
                 DisplayName = user.DisplayName,
-                Image = null,
+                Image = user?.Photos?.FirstOrDefault(x => x.IsMain)?.Url,
                 Token = _tokenService.CreateToken(user),
                 Username = user.UserName
             };

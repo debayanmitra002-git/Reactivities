@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,6 +32,19 @@ namespace Reactivities.Api.Extensions
                         IssuerSigningKey = key,
                         ValidateIssuer = false,
                         ValidateAudience = false
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context => 
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if(!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/chats")))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
             services.AddAuthorization(options => {
